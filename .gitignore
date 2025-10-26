@@ -1,0 +1,38 @@
+# Python virtual environment
+venv/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# SQLite Database
+*.db
+
+# Environment variables
+.env
+.env.*
+
+# Node.js dependencies
+node_modules/
+
+# Build outputs
+build/
+dist/
+
+# Log files
+*.log
+
+# IDE/Editor specific files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# macOS specific files
+.DS_Store
+
+# React build output
+frontend/build/
+
