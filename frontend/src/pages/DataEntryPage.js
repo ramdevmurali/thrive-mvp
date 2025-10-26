@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
 // --- Import Material-UI Components ---
-// These are pre-built, professional-looking UI components
 import {
   Container,
   FormControl,
@@ -15,29 +14,39 @@ import {
   Button,
   Typography,
   Box,
-  Alert 
+  Alert,
+  OutlinedInput, // NEW: Import for the multi-select box
+  Checkbox,       // NEW: Import for checkboxes in the dropdown
+  ListItemText  // NEW: Import to show text next to checkboxes
 } from '@mui/material';
 
-// The base URL of our Flask API
 const API_URL = 'http://localhost:5001/api';
+
+// NEW: Define the list of possible activities
+const activityOptions = [
+  'Medication Taken',
+  'Attended Group Therapy',
+  'Went for a Walk',
+  'Family Visit',
+  'Art Class',
+  'Read a Book',
+  'Watched a Movie'
+];
 
 function DataEntryPage() {
   // --- State Management ---
-  // We use 'useState' to store and manage data in our component
-  const [clients, setClients] = useState([]); // To store the list of clients from the API
-  const [selectedClient, setSelectedClient] = useState(''); // To store the ID of the selected client
-  const [moodScore, setMoodScore] = useState(3); // To store the value from the slider (default to 3)
-  const [note, setNote] = useState(''); // To store the text from the note field
-  const [statusMessage, setStatusMessage] = useState(null); // To show success/error messages
+  const [clients, setClients] = useState([]); 
+  const [selectedClient, setSelectedClient] = useState(''); 
+  const [moodScore, setMoodScore] = useState(3);
+  const [note, setNote] = useState('');
+  const [statusMessage, setStatusMessage] = useState(null);
+  const [selectedActivities, setSelectedActivities] = useState([]); // NEW: State for activities
 
   // --- Data Fetching ---
-  // 'useEffect' runs code after the component mounts (loads).
-  // The empty array [] means it will only run once.
   useEffect(() => {
-    // Fetch the list of clients from our backend API
     axios.get(`${API_URL}/clients`)
       .then(response => {
-        setClients(response.data); // Store the fetched clients in our state
+        setClients(response.data); 
       })
       .catch(error => {
         console.error('Error fetching clients:', error);
@@ -47,42 +56,36 @@ function DataEntryPage() {
 
   // --- Event Handlers ---
   const handleSubmit = (event) => {
-    event.preventDefault(); // Prevent the browser's default form submission
+    event.preventDefault(); 
     
-    // Basic validation
     if (!selectedClient) {
       setStatusMessage({ type: 'error', text: 'Please select a client.' });
       return;
     }
 
-    // The data payload to send to the backend
     const newLog = {
       client_id: selectedClient,
       mood_score: moodScore,
-      // In a real app, you would have a multi-select for activities
-      activities: 'Medication Taken,Attended Group Therapy', 
+      activities: selectedActivities.join(','), // CHANGED: Join the array into a string
       note: note,
     };
 
-    // Use axios to send a POST request to our API
     axios.post(`${API_URL}/logs`, newLog)
       .then(response => {
-        // Handle success
         setStatusMessage({ type: 'success', text: 'Log submitted successfully!' });
         // Reset the form fields
         setSelectedClient('');
         setMoodScore(3);
         setNote('');
+        setSelectedActivities([]); // NEW: Reset activities
       })
       .catch(error => {
-        // Handle error
         console.error('Error submitting log:', error);
         setStatusMessage({ type: 'error', text: 'Failed to submit log.' });
       });
   };
 
   // --- JSX Rendering ---
-  // This is what the user sees
   return (
     <Container maxWidth="sm">
       <Typography variant="h4" component="h1" gutterBottom>
@@ -105,6 +108,26 @@ function DataEntryPage() {
             {clients.map((client) => (
               <MenuItem key={client.id} value={client.id}>
                 {client.name}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+
+        {/* NEW: Activities Multi-Select Dropdown */}
+        <FormControl fullWidth>
+          <InputLabel id="activities-select-label">Select Activities</InputLabel>
+          <Select
+            labelId="activities-select-label"
+            multiple
+            value={selectedActivities}
+            onChange={(e) => setSelectedActivities(e.target.value)}
+            input={<OutlinedInput label="Select Activities" />}
+            renderValue={(selected) => selected.join(', ')} // How the selected values look in the box
+          >
+            {activityOptions.map((activity) => (
+              <MenuItem key={activity} value={activity}>
+                <Checkbox checked={selectedActivities.indexOf(activity) > -1} />
+                <ListItemText primary={activity} />
               </MenuItem>
             ))}
           </Select>
